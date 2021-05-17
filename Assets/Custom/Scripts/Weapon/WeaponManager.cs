@@ -15,6 +15,10 @@ public class WeaponManager : MonoBehaviour
 
     private AudioSource audioSource;
 
+    private List<GameObject> _bulletHoles = new List<GameObject>();
+
+    private int _maxBulletHoles = 5;
+
     public GameObject ammoCounter;
 
     public GameObject totalAmmoCounter;
@@ -121,17 +125,29 @@ public class WeaponManager : MonoBehaviour
             {
                 int damage = getEquipped().getDamage();
                 actor.applyDamage(damage);
-                //return;
+                return;
             }
 
             BoxCollider boxCollider = hit.collider.GetComponent<BoxCollider>();
+            MeshCollider meshCollider = hit.collider.GetComponent<MeshCollider>();
 
-            if (boxCollider != null)
+            if (boxCollider != null || meshCollider != null)
             {
                 // Add bullet holes to wall / box etc
                 //Vector3 point = hit.point;
                 Vector3 point = new Vector3(hit.point.x, hit.point.y, hit.point.z - 0.05f);
-                Instantiate(bulletHolePrefab, point, Quaternion.LookRotation(hit.normal));
+                GameObject newBulletHole = Instantiate(bulletHolePrefab, point, Quaternion.LookRotation(hit.normal));
+
+                // todo not working - not sure if not getting added to list or not getting destroyed 
+                // If max bullet holes reached - destroy first created
+                if (_bulletHoles.Count > _maxBulletHoles)
+                {
+                    Debug.Log("Greater than max - " + _maxBulletHoles);
+                    Debug.Log(_bulletHoles.Count);
+                    Debug.Log(_bulletHoles.ToArray().ToString());
+                    Destroy(_bulletHoles[0]);
+                }
+                _bulletHoles.Add(newBulletHole);
             }
         }
     }
