@@ -17,7 +17,7 @@ public class WeaponManager : MonoBehaviour
 
     private List<GameObject> _bulletHoles = new List<GameObject>();
 
-    private int _maxBulletHoles = 5;
+    private int _maxBulletHoles = 250;
 
     public GameObject ammoCounter;
 
@@ -99,7 +99,6 @@ public class WeaponManager : MonoBehaviour
         for (int i = 0; _isFiring == true && ammo > 0; i++)
         {
             fireSound();
-            Debug.Log("Firing");
             ammo--;
             equipped.setAmmoInMagezine(ammo);
             hitscan();
@@ -107,6 +106,9 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Actually fires "projectile" and does damage to valid actors
+    /// </summary>
     public void hitscan()
     {
         Camera camera = gameObject.GetComponentInChildren<Camera>();
@@ -134,18 +136,15 @@ public class WeaponManager : MonoBehaviour
             if (boxCollider != null || meshCollider != null)
             {
                 // Add bullet holes to wall / box etc
-                //Vector3 point = hit.point;
                 Vector3 point = new Vector3(hit.point.x, hit.point.y, hit.point.z - 0.05f);
                 GameObject newBulletHole = Instantiate(bulletHolePrefab, point, Quaternion.LookRotation(hit.normal));
 
-                // todo not working - not sure if not getting added to list or not getting destroyed 
                 // If max bullet holes reached - destroy first created
                 if (_bulletHoles.Count > _maxBulletHoles)
                 {
-                    Debug.Log("Greater than max - " + _maxBulletHoles);
-                    Debug.Log(_bulletHoles.Count);
-                    Debug.Log(_bulletHoles.ToArray().ToString());
-                    Destroy(_bulletHoles[0]);
+                    GameObject oldBulletHole = _bulletHoles[0];
+                    Destroy(oldBulletHole);
+                    _bulletHoles.RemoveAt(0);
                 }
                 _bulletHoles.Add(newBulletHole);
             }
@@ -172,6 +171,9 @@ public class WeaponManager : MonoBehaviour
         audioManagerSource.playReloadSound(0);
     }
 
+    /// <summary>
+    /// Updates Ammo and Magazine counter in UI
+    /// </summary>
     private void updateUi()
     {
         ammoCounter.GetComponent<Text>().text = getEquipped().getAmmoInMagezine().ToString();
