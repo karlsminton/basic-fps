@@ -27,6 +27,8 @@ public class WeaponManager : MonoBehaviour
 
     public GameObject bulletHolePrefab;
 
+    public GameObject muzzleFlash;
+
     void Start()
     {
         // Initialise Weapons
@@ -103,6 +105,7 @@ public class WeaponManager : MonoBehaviour
             ammo--;
             equipped.setAmmoInMagezine(ammo);
             hitscan();
+            getMuzzleFlash();
             yield return new WaitForSeconds(rate);
         }
     }
@@ -160,6 +163,15 @@ public class WeaponManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Store ParticleSystem and play animation
+    /// </summary>
+    public void getMuzzleFlash()
+    {
+        ParticleSystem particles = muzzleFlash.GetComponent<ParticleSystem>();
+        particles.Play();
     }
 
     /// <summary>
