@@ -13,8 +13,6 @@ public class WeaponManager : MonoBehaviour
 
     private WeaponInterface _equipped = null;
 
-    private AudioSource audioSource;
-
     private List<GameObject> _bulletHoles = new List<GameObject>();
 
     private int _maxBulletHoles = 250;
@@ -39,9 +37,6 @@ public class WeaponManager : MonoBehaviour
 
         // Initialise Ui 
         updateUi();
-
-        // Initialise Audio
-        audioSource = gameObject.GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -91,6 +86,12 @@ public class WeaponManager : MonoBehaviour
         return _equipped;
     }
 
+    /// <summary>
+    /// Fires Weapon
+    /// todo add recoil
+    /// todo add animations
+    /// </summary>
+    /// <returns></returns>
     IEnumerator fire()
     {
         WeaponInterface equipped = getEquipped();
@@ -107,18 +108,24 @@ public class WeaponManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Actually fires "projectile" and does damage to valid actors
+    /// Actually fires raycast and does damage to valid actors
+    /// todo make spread of weapon increase over time
     /// </summary>
     public void hitscan()
     {
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
-        Vector3 rayOrigin = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0.0f));
+        // Randomise spread
+        // todo make spread values part of WeaponInterface
+        float randomX = Random.Range(0.0f, 0.5f) + 0.25f;
+        float randomY = Random.Range(0.0f, 0.5f) + 0.25f;
+        Vector3 rayOrigin = camera.ViewportToWorldPoint(new Vector3(randomX, randomY, 0.5f));
+
         // Declare a raycast hit to store information about what our raycast has hit
         RaycastHit hit;
 
         // 1000.0f represents range of weapon
-        // may want to turn this into a const or WeaponInterface method
+        // todo make range part of WeaponInterface
         if (Physics.Raycast(rayOrigin, camera.transform.forward, out hit, 1000.0f))
         {
             ActorInterface actor = hit.collider.GetComponent<ActorInterface>();
@@ -135,18 +142,22 @@ public class WeaponManager : MonoBehaviour
 
             if (boxCollider != null || meshCollider != null)
             {
-                // Add bullet holes to wall / box etc
-                Vector3 point = new Vector3(hit.point.x, hit.point.y, hit.point.z - 0.05f);
-                GameObject newBulletHole = Instantiate(bulletHolePrefab, point, Quaternion.LookRotation(hit.normal));
-
-                // If max bullet holes reached - destroy first created
-                if (_bulletHoles.Count > _maxBulletHoles)
+                if (hit.collider.gameObject.name != "BulletHole(Clone)")
                 {
-                    GameObject oldBulletHole = _bulletHoles[0];
-                    Destroy(oldBulletHole);
-                    _bulletHoles.RemoveAt(0);
+                    // Add bullet holes to wall / box etc
+                    float zOffset = 0.00001f;
+                    Vector3 point = new Vector3(hit.point.x, hit.point.y, hit.point.z - zOffset);
+                    GameObject newBulletHole = Instantiate(bulletHolePrefab, point, Quaternion.LookRotation(hit.normal));
+
+                    // If max bullet holes reached - destroy first created
+                    if (_bulletHoles.Count > _maxBulletHoles)
+                    {
+                        GameObject oldBulletHole = _bulletHoles[0];
+                        Destroy(oldBulletHole);
+                        _bulletHoles.RemoveAt(0);
+                    }
+                    _bulletHoles.Add(newBulletHole);
                 }
-                _bulletHoles.Add(newBulletHole);
             }
         }
     }
